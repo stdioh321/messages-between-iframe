@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script src="https://cdn.jsdelivr.net/npm/postmate@1.5.2/build/postmate.min.js"></script>
+  <title>Parent Page</title>
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+
+</head>
+
+<body>
+
+  <div class="container mx-auto p-4">
+    <h1 class="text-2xl">Parent Page</h1>
+    <div class="grid grid-cols-2 gap-4">
+      <div class="col-span-1 w-full" id="myIframe-container"></div>
+      <div class="col-span-1">
+        <form id="myForm">
+          Child data
+          <input type="text" name="msg"
+            class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+            id="username" required>
+        </form>
+        <ul id="my-list">
+
+        </ul>
+      </div>
+    </div>
+
+    <!-- Create a container for the iframe -->
+
+  </div>
+
+  <script>
+    const containerIframe = document.getElementById('myIframe-container')
+    let child
+    const postmate = new Postmate({
+      container: containerIframe,
+      url: 'http://localhost:3000/child.html',
+      name: "myName",
+      classListArray: ['w-full', 'border', 'p-1', 'rounded', 'h-max[600px]','h-min-[500px]']
+    });
+    postmate.then((c) => {
+      child = c
+      c.on('child-data', (data) => {
+        const li = document.createElement('li')
+        li.innerHTML = data
+        document.querySelector('#my-list').appendChild(li)
+        console.log({ data });
+      })
+
+    });
+
+    async function syncExecCall({
+      child,
+      methodName,
+      eventCb,
+      data = null,
+      timeout = 5000
+    } = {}) {
+
+      const childClone = Object.assign(child);
+
+      return Promise.race([
+        new Promise((res, rej) => {
+          setTimeout(() => rej(false), timeout);
+        }),
+        new Promise((res) => {
+          childClone.call(methodName, data);
+          childClone.on(eventCb ? eventCb : methodName, res);
+        }),
+      ]);
+    }
+
+    async function syncExecGet({
+      child,
+      methodName,
+      timeout = 5000
+    } = {}) {
+
+      const childClone = Object.assign(child);
+      console.log({ childClone });
+      return Promise.race([
+        new Promise((res, rej) => {
+          setTimeout(() => rej(false), timeout);
+        }),
+        new Promise((res) => {
+          console.log({ childClone });
+          res(childClone.get(methodName));
+        }),
+      ]);
+    }
+
+    document.querySelector('#myForm').addEventListener('submit', (evt) => {
+      evt.preventDefault()
+      const { msg } = evt.target
+      child.call('parent-data', msg.value)
+    })
+
+  </script>
+
+</body>
+
+</html>

@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script src="https://cdn.jsdelivr.net/npm/postmate@1.5.2/build/postmate.min.js"></script>
+  <title>IFrame Page</title>
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+
+</head>
+
+<body>
+
+  <div class="container mx-auto">
+    <h1>IFrame child Page</h1>
+    <div class="grid grid col-span-1">
+      <form id="myForm">
+        <input type="text" name="msg"
+          class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+          required>
+
+      </form>
+      <ul id="my-list" class=""></ul>
+    </div>
+  </div>
+  <script>
+    let postmateParent
+    const postmateModel = new Postmate.Model({
+      something: (param1) => 'somethinggggggggggg: ' + param1,
+      'child-data': function (param1) {
+        postmateParent.emit('child-data', param1)
+      },
+      'parent-data': (param1) => {
+        const li = document.createElement('li')
+        li.innerHTML = param1
+        li.classList.add('even:bg-gray-200')
+        document.querySelector('#my-list').appendChild(li)
+        console.log({ param1 });
+      }
+    });
+
+    postmateModel.then(p => {
+      postmateParent = p
+
+      console.log({ postmateParent });
+      // p.emit('some-event', 'Hello, World!');
+    }).catch(err => {
+      console.log(err);
+    });
+    function handleSubmit(evt) {
+      console.log('handleSubmit');
+      evt.preventDefault();
+      const { msg } = evt.target
+      if (!msg.value) return
+      postmateParent.model['child-data'](msg.value);
+
+    }
+    document.querySelector('#myForm').onsubmit = handleSubmit
+
+
+
+  </script>
+
+</body>
+
+</html>
